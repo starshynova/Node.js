@@ -3,6 +3,11 @@ import { database } from './users.js';
 import { hash, compare } from 'bcrypt';
 const saltRounds = 12;
 import { v4 as uuidv4 } from 'uuid';
+import { checkPassword } from './users.js';
+import jsonwebtoken from 'jsonwebtoken';
+const SECRET = 'H6AIgu0wsGCH2mC6ypyRubiPoPSpV4t1';
+
+
 
 
 // TODO Use below import statement for importing middlewares from users.js for your routes
@@ -15,7 +20,7 @@ app.use(express.json());
 
 app.post("/auth/register", async (req, res) => {
   const newUser = { 
-    id: uuidv4(),
+    // id: uuidv4(),
     username: req.body.username,
     password: req.body.password
   };
@@ -45,14 +50,63 @@ app.post("/auth/register", async (req, res) => {
   try {
     newUser.password = await hashPassword(newUser.password);
     const createdUser = database.create(newUser); 
-  res.status(201).send({ id: createdUser.id, username: createdUser.username }).end(); 
+    res.status(201).json({ id: createdUser.id, username: createdUser.username }).end(); 
   } catch (err) {
     console.error(err);
     res.status(500).send({message: "Error creating user"}).end(); 
   }
  
 app.post('/auth/login', async (req, res) => {
+  const { username, password } = req.body;
   
+  try {
+  
+  const findUser = database.getByUsername(username);
+  
+  if (!findUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  
+  const correctPassword = await bcrypt.compare(password, findUser.password);
+  // const validPassword = await checkPassword(username, password);
+
+  if(!correctPassword) {
+    res.status(401).json({ message: "Invalid username / password combination" }).end();
+    return;
+  }
+  // res.status(200).json({ message: "Login successful" }).end();
+  // } catch (err) {
+  //   console.error("Login error:", err);
+  //   res.status(500).json({ message: "Internal server error" }).end();
+  // }
+  // try {
+  const user = { name: username, id: findUser.id };
+  const token = jsonwebtoken.sign(user, SECRET);
+  return res.status(201).json({ token });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+
+});
+
+
+
+
+
+
+  // 3. The password is correct - create a new user session
+  const sessionId = crypto.randomUUID();
+
+
+  // 4. Add the new session to the session database
+  sessions[sessionId] = username;
+
+
+  // 5. Return the session ID to the client
+  res.status(200).json({ sessionId }).end();
+}); 
+
 })
 
 

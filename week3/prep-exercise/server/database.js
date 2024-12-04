@@ -78,6 +78,9 @@ const makeNewLokiDatabase = () => {
         },
         getById: (id) => {
             return users.findOne({id}) || undefined
+        }, 
+        getByUsername: (username) => {
+            return users.findOne({username}) || undefined
         }
     }
 }
