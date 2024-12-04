@@ -10,3 +10,4 @@ const database = newDatabase({isPersistent})
 
 // You can also create helper functions in this file to help you implement logic
 // inside middlewares
+export { database };
