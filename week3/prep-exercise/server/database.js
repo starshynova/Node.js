@@ -57,6 +57,9 @@ const makeInMemoryDb = () => {
         },
         getById: (id) => {
             return localDb.find(user => user.id === id) || undefined
+        },
+        getByUsername: (username) => {
+            return localDb.find(user => user.username === username) || undefined
         }
     }
 }
@@ -91,7 +94,8 @@ const makeNewLokiDatabase = () => {
  * @param isPersistent should it return a LokiJS based implementation or array based one?
  * @returns {{
  *              create: (function(*): *&{id: string}),
- *              getById: (function(id: string): {id: string}&*)
+ *              getById: (function(id: string): {id: string}&*),
+ *              getByUsername: (function(username: string): {username: string}&*)
  *          }}
  */
 const makeDatabase = ({isPersistent} = {isPersistent: false}) =>
