@@ -20,7 +20,6 @@ app.use(express.json());
 
 app.post("/auth/register", async (req, res) => {
   const newUser = { 
-    // id: uuidv4(),
     username: req.body.username,
     password: req.body.password
   };
@@ -87,25 +86,79 @@ app.post('/auth/login', async (req, res) => {
     console.error("Login error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
+});
 
+app.get('/auth/profile', async (req, res) => {
+  // const sessionId = getSessionId(req);
+
+  const getDecodedUser = (req) => {
+    try {
+    const authorizationHeader = req.headers['authorization'];
+    if(!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Authorization header failed" })
+    }
+
+    const token = authorizationHeader.split(' ')[1];
+
+    const decodedUser = jsonwebtoken.verify(token, SECRET);
+    if (!decodedUser ||!decodedUser.id) {
+      return res.status(401).json({ message: "Invalid token" })
+    }
+    return decodedUser;
+  } catch (err) {
+    res.status(401).json({ message: "Token verification failed"})
+  }
+
+  };
+
+  try {
+    const decodedUser = getDecodedUser(req);
+    const username = sessions[decodedUser.id];
+    if (!username || !decodedUser.id) {
+      return res.status(401).json({ message: 'You are not logged in' }).end();
+    }
+
+    const message = `Hello, you are logged in as ${username}!`;
+    res.status(200).json({ message }).end();
+  } catch (err) {
+    res.status(401).json({ message: err.message }).end();
+  }
 });
 
 
 
+    // const sessionId = authorizationHeader.replace('Bearer ', '');
+    // return sessionId.trim();
+  
+  
+//   const username = sessions[sessionId];
+//   if(!sessionId || !username) {
+//     res.status(401).json({ message: 'Not logged in' }).end();
+//     return;
+//   }
+
+//   const message = `Hello, you are logged in as ${username}!`;
+//   res.status(200).json({ message }).end();
+// });
+
+})
 
 
 
-  // 3. The password is correct - create a new user session
-  const sessionId = crypto.randomUUID();
 
 
-  // 4. Add the new session to the session database
-  sessions[sessionId] = username;
+
+//   // 3. The password is correct - create a new user session
+//   const sessionId = crypto.randomUUID();
 
 
-  // 5. Return the session ID to the client
-  res.status(200).json({ sessionId }).end();
-}); 
+//   // 4. Add the new session to the session database
+//   sessions[sessionId] = username;
+
+
+//   // 5. Return the session ID to the client
+//   res.status(200).json({ sessionId }).end();
+// }); 
 
 })
 
